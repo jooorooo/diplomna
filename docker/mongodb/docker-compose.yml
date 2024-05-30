@@ -1,0 +1,53 @@
+version: '3.5'
+
+services:
+    mongodb:
+        container_name: mongodb
+        image: mongo:latest
+        ports:
+            - "27017:27017"
+        volumes:
+            - mongodb-data:/data/db
+            - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+        healthcheck:
+            test: echo 'db.runCommand("ping").ok' | mongosh mongodb:27017 --quiet
+            interval: 10s
+            timeout: 10s
+            retries: 5
+
+    redis:
+        container_name: redis
+        image: redis:latest
+        ports:
+            - "6379:6379"
+        volumes:
+            - redis-data:/data
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 10s
+            timeout: 10s
+            retries: 5
+
+    mariadb:
+        container_name: mariadb
+        image: mariadb:latest
+        environment:
+            MYSQL_ROOT_PASSWORD: "admin"
+            MYSQL_USER: "joro"
+            MYSQL_PASSWORD: "joro"
+            MYSQL_DATABASE: "mydatabase"
+        ports:
+            - "3306:3306"
+        volumes:
+            - mariadb-data:/var/lib/mysql
+            - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+        healthcheck:
+            test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -padmin"]
+            interval: 10s
+            timeout: 10s
+            retries: 5
+
+volumes:
+    mongodb-data:
+    redis-data:
+    mariadb-data:
